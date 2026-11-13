@@ -84,7 +84,7 @@ h2{font-size:15px;margin:0 0 10px;font-weight:600}
   <header>
     <div>
       <h1>M365 Service Health Monitor</h1>
-      <div class="sub">แหล่งข้อมูล: Graph API <span class="mono">/admin/serviceAnnouncement/issues</span> · fallback: Public RSS</div>
+      <div class="sub" id="sub">แหล่งข้อมูล: Graph API <span class="mono">/admin/serviceAnnouncement/issues</span> · fallback: Public RSS</div>
     </div>
     <div style="display:flex;gap:12px;align-items:center;flex-wrap:wrap">
       <span class="sample" id="src" hidden></span>
@@ -156,6 +156,11 @@ function renderHeader(){
   if (!data){ src.hidden = true; dot.classList.add("off"); return; }
   const stale = Date.now() - new Date(data.generatedAt).getTime() > STALE_MS;
   src.hidden = false;
+  const sub = document.getElementById("sub");
+  sub.dataset.graph ??= sub.innerHTML;
+  sub.innerHTML = isRss()
+    ? `แหล่งข้อมูล: Public RSS <span class="mono">status.cloud.microsoft</span> · เฉพาะ incident ใหญ่ระดับ global ของ Microsoft`
+    : sub.dataset.graph;
   src.className = "sample " + (stale ? "src-stale" : data.source === "rss" ? "" : "src-graph");
   src.textContent = stale ? "Stale" : data.source === "rss" ? "RSS fallback" : "Graph";
   src.title = loadError ? `โหลดข้อมูลล่าสุดไม่สำเร็จ: ${loadError}` : "";

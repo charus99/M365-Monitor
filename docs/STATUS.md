@@ -5,8 +5,10 @@
 - [x] 2. Parsers (pure functions): strip HTML/entity, mojibake, "Next update by", RSS → schema — verify: unit tests ผ่านด้วย fixture จาก feed จริง
 - [x] 3. RSS pipeline: cron → KV → `GET /status.json` (memory cache) — verify: `wrangler dev --test-scheduled` แล้วได้ JSON ตรง schema
 - [x] 4. Frontend: แปลง mockup ให้อ่าน `status.json` — verify: fixture 4 แบบ (incident / ว่าง / stale / rss) ทั้ง light และ dark
-- [ ] 5. Graph: token, issues, healthOverviews, paging, retry, fallback counter — verify: unit tests ด้วย mocked fetch + รันกับ tenant จริงผ่าน `wrangler dev` — **โค้ด + unit tests เสร็จ, รอทดสอบกับ tenant จริง (ต้องมี App Registration)**
-- [ ] 6. Deploy: secrets + cron ทำงานบน `*.workers.dev` — verify: URL แสดงข้อมูลจริง, `generatedAt` ขยับทุก 5 นาที — **deploy แบบ RSS-only แล้ว (ยังไม่มี secrets); cron เขียนข้อมูลสำเร็จ, หน้าเว็บแสดงข้อมูลจริง, `generatedAt` ขยับทุก 5 นาที (03:25 → 03:30 UTC) — เหลือ: ใส่ secrets แล้วยืนยันว่า source เป็น graph**
+- [x] 5. Graph: token, issues, healthOverviews, paging, retry, fallback counter — verify: unit tests ด้วย mocked fetch ✅ — *ทดสอบกับ tenant จริงเลื่อนไป Later (ไม่มี admin consent)*
+- [x] 6. Deploy บน `*.workers.dev` (RSS-only) — verify: URL แสดงข้อมูลจริง ✅, `generatedAt` ขยับทุก 5 นาที ✅ (03:25 → 03:30 UTC) — *ตั้ง secrets เลื่อนไป Later*
+
+**v1 เสร็จ (RSS-only)** — งานถัดไปดู "Later" ใน REQUIREMENTS: เปิดใช้ Graph, Telegram
 
 ## Decisions log
 - 2026-11-13 — เป็น project แยก ไม่รวมกับ project อื่น — ผู้ใช้ตัดสินใจ (spec เดิมให้รวมกับ project Python)
@@ -23,6 +25,7 @@
 - 2026-11-13 — Milestone 5 (โค้ด): `src/graph.ts` token (client credentials ผ่าน fetch), paging `@odata.nextLink` (สูงสุด 20 หน้า), retry 429/5xx/network 3 ครั้ง backoff 1/2/4 วิ หรือ `Retry-After` (สูงสุด 10 วิ), 4xx อื่นไม่ retry; error ไม่มี secret. `poll.ts`: Graph ล้มครั้งแรก → คงข้อมูลเดิม, ครั้งที่ 2 ติด / ไม่มีข้อมูลเดิม / ไม่มี secret → RSS. เปลี่ยนจาก M3: เลิกใช้ KV key `services` (services อยู่ใน status.json แล้ว) ตัวนับล้มอยู่ใน key `state` (private) เขียนเฉพาะตอนค่าเปลี่ยน → ปกติเขียน KV 1 ครั้ง/รอบ
 - 2026-11-13 — Deploy ครั้งแรก (RSS-only) ตามที่ผู้ใช้ขอ: KV namespace `m365-monitor-status` ถูกสร้างอัตโนมัติ (ไม่มี id ใน `wrangler.toml`); ผู้ใช้เปลี่ยน workers.dev subdomain ของบัญชีเพื่อไม่ให้มีชื่อบัญชีใน URL — ไม่ใส่ URL จริงใน repo (repo เป็น public); KV write ต้องรอ propagate ~60 วิ ก่อน edge อื่นเห็น
 - 2026-11-13 — UI: ตอน `source: "rss"` ซ่อน id (guid), "เริ่ม" และ tile ระยะเวลา เพราะ RSS ไม่มีเวลาเริ่มจริง (pubDate = เวลาอัปเดตล่าสุด) และ guid เปลี่ยนทุกอัปเดต; Service overview แสดง "ยังไม่มีข้อมูล" แทนกล่องว่าง
+- 2026-11-13 — ผู้ใช้ไม่มีสิทธิ์ admin consent → v1 = RSS-only; โค้ด Graph คงไว้ ทำงานเมื่อตั้ง secrets; subtitle หน้าเว็บเปลี่ยนตาม source (RSS: "เฉพาะ incident ใหญ่ระดับ global")
 
 ## Open questions
-- App Registration (`ServiceHealth.Read.All` + admin consent) — ผู้ใช้สร้าง, ต้องมีก่อน milestone 5
+- เปิดใช้ Graph ต้องให้ Global Admin / Privileged Role Admin ขององค์กร grant consent `ServiceHealth.Read.All` (ผู้ใช้ไม่มีสิทธิ์)

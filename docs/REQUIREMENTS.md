@@ -3,6 +3,7 @@
 ## Goal
 Dashboard สาธารณะแสดงสถานะ Microsoft 365 ของ tenant เราแบบ near real-time (poll ทุก 5 นาที)
 ใช้ Graph API เป็นแหล่งหลัก และ Public RSS เป็น fallback หน้าตาตาม mockup
+**v1 ใช้งานจริงด้วย RSS อย่างเดียว** (ผู้ใช้ไม่มีสิทธิ์ admin consent) — โค้ด Graph อยู่ครบและทำงานทันทีเมื่อตั้ง secrets
 
 ## Users
 คนทั่วไป — เปิดเป็น public ไม่ต้อง login
@@ -10,9 +11,9 @@ Dashboard สาธารณะแสดงสถานะ Microsoft 365 ขอ�
 
 ## Version 1 — must have
 - [x] Cron Worker poll ทุก 5 นาที
-- [ ] Graph: `GET /v1.0/admin/serviceAnnouncement/issues?$filter=isResolved eq false` และ `/healthOverviews`
+- [x] (โค้ด + unit tests; ยังไม่ได้ทดสอบกับ tenant จริง) Graph: `GET /v1.0/admin/serviceAnnouncement/issues?$filter=isResolved eq false` และ `/healthOverviews`
       — รองรับ paging (`@odata.nextLink`) และ retry 429/5xx แบบ backoff
-- [ ] Fallback เป็น RSS `https://status.cloud.microsoft/api/feed/mac` เมื่อ Graph ล้มติดกัน 2 ครั้ง
+- [x] (โค้ด + unit tests) Fallback เป็น RSS `https://status.cloud.microsoft/api/feed/mac` เมื่อ Graph ล้มติดกัน 2 ครั้ง
 - [x] Strip HTML / decode entity / แก้ mojibake ของข้อความ post และ description
 - [x] ดึง "Next update by: ..." จาก post ล่าสุดด้วย regex
 - [x] เก็บ `status.json` ใน KV ตาม schema ใน [M365_HEALTH_MONITOR_SPEC.md](../M365_HEALTH_MONITOR_SPEC.md) แล้วเสิร์ฟพร้อม cache (memory ต่อ isolate 30 วิ + `Cache-Control`)
@@ -38,6 +39,7 @@ Dashboard สาธารณะแสดงสถานะ Microsoft 365 ขอ�
 - ตอนอยู่ใน RSS fallback: `services` ใช้รายชื่อชุดล่าสุดที่ได้จาก Graph (เก็บใน KV)
 
 ## Later — nice to have
+- เปิดใช้ Graph: ขอ Global Admin / Privileged Role Admin grant consent `ServiceHealth.Read.All` → ทดสอบกับ tenant จริง → `wrangler secret put` 3 ตัว (ดู TECH-STACK)
 - Telegram alert (issue ใหม่ / update / resolved / สลับแหล่งข้อมูล) — ต้องมี state diff + test
 
 ## Out of scope
@@ -55,11 +57,12 @@ Dashboard สาธารณะแสดงสถานะ Microsoft 365 ขอ�
 
 ## Done criteria for version 1
 - หน้าเว็บบน `*.workers.dev` หน้าตาตรง mockup และไม่มีข้อมูล hardcode เหลือ
+- หน้าเว็บบน `*.workers.dev` แสดงข้อมูลจริงจาก RSS
 - เวลา poll มาจาก `generatedAt` จริง และ `generatedAt` ขยับทุก ~5 นาที; เกิน 15 นาทีขึ้น Stale
 - ไม่มี issue → แสดง empty state / All healthy ถูกต้อง
-- Graph ล่ม (เช่น secret ผิด) → ภายใน 2 รอบเปลี่ยนเป็น RSS และ badge เป็น RSS fallback
+- Graph ล่ม (เช่น secret ผิด) → ภายใน 2 รอบเปลี่ยนเป็น RSS และ badge เป็น RSS fallback — *ตรวจด้วย unit tests เท่านั้นใน v1 (ยังไม่มี Graph จริง)*
 - Secret ไม่อยู่ใน repo และไม่อยู่ฝั่ง browser
 - Unit tests ตามรายการข้างบนผ่านทั้งหมด
 
 ## Open questions
-- App Registration พร้อม `ServiceHealth.Read.All` + admin consent — ผู้ใช้สร้างเอง (ต้องมีก่อน milestone 5)
+- App Registration + admin consent — ผู้ใช้ไม่มีสิทธิ์ admin; ต้องขอ IT ขององค์กร (เลื่อนไป Later)
