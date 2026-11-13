@@ -26,11 +26,18 @@ h1{font-size:22px;margin:0;font-weight:600}
 .sub{color:var(--muted);font-size:13px}
 .mono{font-family:"IBM Plex Mono",monospace}
 .sample{font-size:12px;background:var(--amber-bg);color:var(--amber);padding:3px 10px;border-radius:999px;font-weight:500}
+.sample.src-graph{background:var(--green-bg);color:var(--green)}
+.sample.src-stale{background:var(--red-bg);color:var(--red)}
 .poll{display:flex;align-items:center;gap:8px;font-size:13px;color:var(--muted)}
 .dot{width:8px;height:8px;border-radius:50%;background:var(--green);box-shadow:0 0 0 0 var(--green);animation:pulse 2s infinite}
+.dot.off{background:var(--red);animation:none}
 @keyframes pulse{0%{box-shadow:0 0 0 0 rgba(76,192,112,.5)}70%{box-shadow:0 0 0 8px rgba(76,192,112,0)}100%{box-shadow:0 0 0 0 rgba(76,192,112,0)}}
 .banner{background:var(--red-bg);border:1px solid var(--red);border-left-width:4px;border-radius:8px;padding:12px 16px;margin-bottom:20px;display:flex;gap:10px;align-items:flex-start}
 .banner b{color:var(--red)}
+.banner.ok{background:var(--green-bg);border-color:var(--green)}
+.banner.ok b{color:var(--green)}
+.banner.warn{background:var(--amber-bg);border-color:var(--amber)}
+.banner.warn b{color:var(--amber)}
 .tiles{display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin-bottom:24px}
 .tile{background:var(--panel);border:1px solid var(--line);border-radius:10px;padding:14px 16px}
 .tile .n{font-size:28px;font-weight:600;line-height:1.1}
@@ -47,22 +54,24 @@ h2{font-size:15px;margin:0 0 10px;font-weight:600}
 .inc .bar{background:var(--red)} .adv .bar{background:var(--amber)}
 .t{font-weight:500}
 .meta{font-size:12.5px;color:var(--muted);margin-top:4px;display:flex;flex-wrap:wrap;gap:4px 12px}
-.badge{font-size:12px;padding:2px 9px;border-radius:999px;white-space:nowrap;font-weight:500}
+.badge{font-size:12px;padding:2px 9px;border-radius:999px;white-space:nowrap;font-weight:500;background:var(--grey-bg);color:var(--muted)}
 .b-investigating{background:var(--grey-bg);color:var(--muted)}
 .b-serviceInterruption{background:var(--red-bg);color:var(--red)}
 .b-serviceDegradation{background:var(--amber-bg);color:var(--amber)}
-.b-restoringService{background:var(--blue-bg);color:var(--blue)}
+.b-restoringService,.b-extendedRecovery,.b-verifyingService{background:var(--blue-bg);color:var(--blue)}
 .b-serviceRestored{background:var(--green-bg);color:var(--green)}
 .body{border-top:1px solid var(--line);padding:12px 16px 16px 32px}
-.impact{font-size:14px;margin:0 0 12px}
+.impact{font-size:14px;margin:0 0 12px;white-space:pre-line}
 .tl{border-left:2px solid var(--line);margin-left:4px;padding-left:16px}
 .post{position:relative;margin-bottom:12px;font-size:13.5px}
+.post div{white-space:pre-line}
 .post:before{content:"";position:absolute;left:-22px;top:6px;width:10px;height:10px;border-radius:50%;background:var(--panel);border:2px solid var(--muted)}
 .post:first-child:before{border-color:var(--blue);background:var(--blue)}
 .post time{font-size:12px;color:var(--muted)}
 .svc{background:var(--panel);border:1px solid var(--line);border-radius:10px;padding:4px 0}
 .svc div{display:flex;justify-content:space-between;align-items:center;padding:8px 14px;font-size:13.5px;border-bottom:1px solid var(--line)}
 .svc div:last-child{border-bottom:0}
+.svc .none{color:var(--muted);justify-content:center}
 .s{width:9px;height:9px;border-radius:50%;display:inline-block;margin-right:8px}
 .s-ok{background:var(--green)} .s-adv{background:var(--amber)} .s-inc{background:var(--red)}
 .legend{font-size:12px;color:var(--muted);margin-top:8px;display:flex;gap:12px;flex-wrap:wrap}
@@ -78,20 +87,18 @@ h2{font-size:15px;margin:0 0 10px;font-weight:600}
       <div class="sub">แหล่งข้อมูล: Graph API <span class="mono">/admin/serviceAnnouncement/issues</span> · fallback: Public RSS</div>
     </div>
     <div style="display:flex;gap:12px;align-items:center;flex-wrap:wrap">
-      <span class="sample">ข้อมูลตัวอย่าง</span>
-      <div class="poll"><span class="dot"></span>Poll ล่าสุด <span class="mono" id="lastPoll"></span> · ทุก 5 นาที</div>
+      <span class="sample" id="src" hidden></span>
+      <div class="poll"><span class="dot" id="dot"></span>Poll ล่าสุด <span class="mono" id="lastPoll">—</span> · ทุก 5 นาที</div>
     </div>
   </header>
 
-  <div class="banner">
-    <div><b>Major incident EX1234567</b> — Exchange Online และบริการที่พึ่ง Exchange ใช้งานไม่ได้หลายส่วน · อัปเดตถัดไป <b class="mono">10:00</b> (เวลาไทย)</div>
-  </div>
+  <div class="banner warn" id="banner"><div>กำลังโหลดข้อมูล…</div></div>
 
   <div class="tiles">
-    <div class="tile"><div class="n" style="color:var(--red)" id="nInc">0</div><div class="l">Incident ที่ยังเปิดอยู่</div></div>
-    <div class="tile"><div class="n" style="color:var(--amber)" id="nAdv">0</div><div class="l">Advisory ที่ยังเปิดอยู่</div></div>
-    <div class="tile"><div class="n" id="nSvc">0</div><div class="l">Service ที่ได้รับผลกระทบ</div></div>
-    <div class="tile"><div class="n mono" style="font-size:22px;padding-top:4px">6h 18m</div><div class="l">ระยะเวลา incident หลัก</div></div>
+    <div class="tile"><div class="n" style="color:var(--red)" id="nInc">–</div><div class="l">Incident ที่ยังเปิดอยู่</div></div>
+    <div class="tile"><div class="n" style="color:var(--amber)" id="nAdv">–</div><div class="l">Advisory ที่ยังเปิดอยู่</div></div>
+    <div class="tile"><div class="n" id="nSvc">–</div><div class="l">Service ที่ได้รับผลกระทบ</div></div>
+    <div class="tile"><div class="n mono" style="font-size:22px;padding-top:4px" id="dur">–</div><div class="l">ระยะเวลา incident หลัก</div></div>
   </div>
 
   <div class="grid">
@@ -113,83 +120,157 @@ h2{font-size:15px;margin:0 0 10px;font-weight:600}
 </div>
 
 <script>
-const issues = [
-  { id:"EX1234567", service:"Exchange Online", feature:"E-Mail and calendar access", classification:"incident",
-    status:"restoringService", start:"2026-11-12T19:40:00Z", modified:"2026-11-13T01:58:00Z",
-    title:"Users may be unable to connect to multiple Microsoft 365 services",
-    impact:"ฟีเจอร์ที่พึ่ง Exchange Online ได้รับผลกระทบ: OWA, Outlook (MAPI), EAS, REST และอีเมลส่งล่าช้า",
-    posts:[
-      ["2026-11-13T01:58:00Z","กำลังเพิ่ม infrastructure capacity เพื่อรองรับ traffic ของ region ที่ทยอยกลับมาออนไลน์ และติดตามผลการเปลี่ยนแปลง"],
-      ["2026-11-13T00:30:00Z","บาง region เริ่มกลับมาให้บริการ กำลัง rebalance traffic"],
-      ["2026-11-12T22:10:00Z","ระบุสาเหตุเบื้องต้นได้แล้ว อยู่ระหว่างดำเนินการแก้ไข"],
-      ["2026-11-12T19:55:00Z","กำลังตรวจสอบรายงานว่าผู้ใช้เข้า mailbox ไม่ได้"]
-    ]},
-  { id:"TM987654", service:"Microsoft Teams", feature:"Calendar & meetings", classification:"advisory",
-    status:"serviceDegradation", start:"2026-11-12T20:05:00Z", modified:"2026-11-13T01:40:00Z",
-    title:"Calendar and meeting scheduling may fail",
-    impact:"สร้าง/แก้ไขนัดประชุมไม่ได้ แต่แชทและประชุมออนไลน์ยังใช้ได้",
-    posts:[["2026-11-13T01:40:00Z","ผลกระทบสัมพันธ์กับ EX1234567 จะฟื้นตามกัน"]]},
-  { id:"MO445566", service:"Microsoft Defender for Office 365", feature:"Safe Links", classification:"incident",
-    status:"serviceInterruption", start:"2026-11-12T20:15:00Z", modified:"2026-11-13T01:20:00Z",
-    title:"Safe Links may be unable to verify URLs",
-    impact:"การคลิกลิงก์ใน Outlook/Teams อาจไม่ผ่านการตรวจ URL — เฝ้าระวัง phishing",
-    posts:[["2026-11-13T01:20:00Z","อยู่ระหว่างกู้คืนพร้อมกับ Exchange Online"]]},
-  { id:"PU778899", service:"Microsoft Purview", feature:"DLP / Auto-labeling", classification:"advisory",
-    status:"investigating", start:"2026-11-12T21:00:00Z", modified:"2026-11-13T00:50:00Z",
-    title:"DLP and auto-labeling policies may not apply",
-    impact:"DLP, Communication Compliance และ Data Classification อาจไม่ทำงาน",
-    posts:[["2026-11-13T00:50:00Z","กำลังตรวจสอบผลกระทบต่อ policy evaluation"]]},
-  { id:"SP112233", service:"SharePoint Online", feature:"Exchange-dependent features", classification:"advisory",
-    status:"restoringService", start:"2026-11-12T20:30:00Z", modified:"2026-11-13T01:10:00Z",
-    title:"Features that depend on Exchange Online may be impacted",
-    impact:"เข้าไฟล์ใน SharePoint ได้ปกติ แต่ฟีเจอร์ที่เชื่อมกับเมลอาจใช้ไม่ได้",
-    posts:[["2026-11-13T01:10:00Z","เริ่มเห็นการฟื้นตัวบางส่วน"]]}
-];
-const services = ["Exchange Online","Microsoft Teams","SharePoint Online","OneDrive for Business",
-  "Microsoft Defender for Office 365","Microsoft Purview","Microsoft Intune","Microsoft Entra ID","Power BI","Planner"];
+const STATUS_URL = "status.json";
+const REFRESH_MS = 60_000;
+const STALE_MS = 15 * 60_000;
 
-const fmt = iso => new Date(iso).toLocaleString("th-TH",{timeZone:"Asia/Bangkok",day:"2-digit",month:"short",hour:"2-digit",minute:"2-digit"});
-const label = {investigating:"Investigating",serviceInterruption:"Interruption",serviceDegradation:"Degradation",restoringService:"Restoring",serviceRestored:"Restored"};
+let data = null;          // last good status.json
+let loadError = null;     // message of the last failed fetch, if any
+let filter = "all";
+let firstRender = true;
+const openIds = new Set(); // keeps expanded cards open across refreshes
 
-function render(f){
+const esc = s => String(s ?? "").replace(/[&<>"']/g, c => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
+const fmt = iso => iso ? new Date(iso).toLocaleString("th-TH",{timeZone:"Asia/Bangkok",day:"2-digit",month:"short",hour:"2-digit",minute:"2-digit"}) : "—";
+const hhmm = iso => new Date(iso).toLocaleTimeString("th-TH",{timeZone:"Asia/Bangkok",hour:"2-digit",minute:"2-digit"});
+const label = {investigating:"Investigating",serviceInterruption:"Interruption",serviceDegradation:"Degradation",
+  restoringService:"Restoring",serviceRestored:"Restored",extendedRecovery:"Extended recovery",verifyingService:"Verifying",
+  falsePositive:"False positive",investigationSuspended:"Suspended",postIncidentReviewPublished:"PIR published",serviceOperational:"Healthy"};
+const BADGE = new Set(["investigating","serviceInterruption","serviceDegradation","restoringService","serviceRestored","extendedRecovery","verifyingService"]);
+
+function duration(ms){
+  const m = Math.max(0, Math.floor(ms / 60000)), d = Math.floor(m / 1440), h = Math.floor(m % 1440 / 60);
+  return d ? `${d}d ${h}h` : `${h}h ${m % 60}m`;
+}
+
+const issues = () => (data?.issues ?? []).slice().sort((a,b) =>
+  (a.classification === "incident" ? 0 : 1) - (b.classification === "incident" ? 0 : 1) ||
+  (b.modified || "").localeCompare(a.modified || ""));
+const incidents = () => issues().filter(i => i.classification === "incident");
+
+function renderHeader(){
+  const src = document.getElementById("src"), dot = document.getElementById("dot");
+  if (!data){ src.hidden = true; dot.classList.add("off"); return; }
+  const stale = Date.now() - new Date(data.generatedAt).getTime() > STALE_MS;
+  src.hidden = false;
+  src.className = "sample " + (stale ? "src-stale" : data.source === "rss" ? "" : "src-graph");
+  src.textContent = stale ? "Stale" : data.source === "rss" ? "RSS fallback" : "Graph";
+  src.title = loadError ? `โหลดข้อมูลล่าสุดไม่สำเร็จ: ${loadError}` : "";
+  dot.classList.toggle("off", stale || !!loadError);
+  document.getElementById("lastPoll").textContent = hhmm(data.generatedAt);
+}
+
+function renderBanner(){
+  const el = document.getElementById("banner");
+  if (!data){
+    el.className = "banner warn";
+    el.innerHTML = `<div><b>ยังไม่มีข้อมูล</b> — ${esc(loadError || "กำลังโหลด…")}</div>`;
+    return;
+  }
+  const inc = incidents().slice().sort((a,b) => (a.start || "").localeCompare(b.start || ""));
+  if (!inc.length && Date.now() - new Date(data.generatedAt).getTime() > STALE_MS){
+    el.className = "banner warn";
+    el.innerHTML = `<div><b>ข้อมูลไม่อัปเดต</b> — poll สำเร็จครั้งล่าสุด ${esc(fmt(data.generatedAt))} จึงยังยืนยันไม่ได้ว่าทุก service ปกติ</div>`;
+    return;
+  }
+  if (!inc.length){
+    el.className = "banner ok";
+    el.innerHTML = `<div><b>All services healthy</b> — ไม่มี incident ที่เปิดอยู่</div>`;
+    return;
+  }
+  const i = inc[0], more = inc.length - 1;
+  el.className = "banner";
+  el.innerHTML = `<div><b>Major incident ${esc(i.id)}</b> — ${esc(i.service)}: ${esc(i.title)}` +
+    (i.nextUpdateBy ? ` · อัปเดตถัดไป <b class="mono">${esc(hhmm(i.nextUpdateBy))}</b> (เวลาไทย)` : "") +
+    (more ? ` · และอีก ${more} incident` : "") + `</div>`;
+}
+
+function renderTiles(){
+  const all = issues(), inc = incidents();
+  const set = (id, v) => document.getElementById(id).textContent = data ? v : "–";
+  set("nInc", inc.length);
+  set("nAdv", all.length - inc.length);
+  set("nSvc", new Set(all.map(i => i.service)).size);
+  const starts = inc.map(i => new Date(i.start).getTime()).filter(Number.isFinite);
+  set("dur", starts.length ? duration(Date.now() - Math.min(...starts)) : "—");
+}
+
+function renderList(){
   const list = document.getElementById("list");
-  const rows = issues.filter(i => f==="all" || i.classification===f);
-  list.innerHTML = rows.length ? rows.map((i,k) => `
-    <details class="issue ${i.classification==="incident"?"inc":"adv"}" ${k===0&&f!=="advisory"?"open":""}>
+  if (!data){ list.innerHTML = ""; return; }
+  const rows = issues().filter(i => filter === "all" || i.classification === filter);
+  if (firstRender && rows.length && filter !== "advisory") openIds.add(rows[0].id);
+  firstRender = false;
+  list.innerHTML = rows.length ? rows.map(i => {
+    const posts = (i.posts ?? []).slice().sort((a,b) => (b.at || "").localeCompare(a.at || ""));
+    return `
+    <details class="issue ${i.classification === "incident" ? "inc" : "adv"}" data-id="${esc(i.id)}" ${openIds.has(i.id) ? "open" : ""}>
       <summary>
         <span class="bar"></span>
         <div>
-          <div class="t">${i.title}</div>
-          <div class="meta"><span class="mono">${i.id}</span><span>${i.service}</span><span>เริ่ม ${fmt(i.start)}</span><span>อัปเดต ${fmt(i.modified)}</span></div>
+          <div class="t">${esc(i.title)}</div>
+          <div class="meta"><span class="mono">${esc(i.id)}</span><span>${esc(i.service)}</span>${i.feature ? `<span>${esc(i.feature)}</span>` : ""}<span>เริ่ม ${esc(fmt(i.start))}</span><span>อัปเดต ${esc(fmt(i.modified))}</span></div>
         </div>
-        <span class="badge b-${i.status}">${label[i.status]}</span>
+        <span class="badge${BADGE.has(i.status) ? " b-" + i.status : ""}">${esc(label[i.status] || i.status || "Unknown")}</span>
       </summary>
       <div class="body">
-        <p class="impact">${i.impact}</p>
-        <div class="tl">${i.posts.map(p=>`<div class="post"><time>${fmt(p[0])}</time><div>${p[1]}</div></div>`).join("")}</div>
+        ${i.impact ? `<p class="impact">${esc(i.impact)}</p>` : ""}
+        <div class="tl">${posts.map(p => `<div class="post"><time>${esc(fmt(p.at))}</time><div>${esc(p.text)}</div></div>`).join("")}</div>
       </div>
-    </details>`).join("") : `<div class="empty">ไม่มีรายการ</div>`;
+    </details>`;
+  }).join("") : `<div class="empty">${data.issues.length ? "ไม่มีรายการในหมวดนี้" : "ไม่มี issue ที่เปิดอยู่ ✓"}</div>`;
 }
 
-document.getElementById("filters").addEventListener("click", e=>{
-  if(!e.target.dataset.f) return;
-  document.querySelectorAll(".chip").forEach(c=>c.classList.toggle("on", c===e.target));
-  render(e.target.dataset.f);
+function renderServices(){
+  const el = document.getElementById("svc");
+  if (!data){ el.innerHTML = ""; return; }
+  const names = (data.services ?? []).map(s => s.name);
+  for (const i of data.issues) if (!names.includes(i.service)) names.push(i.service);
+  if (!names.length){ el.innerHTML = `<div class="none">ยังไม่มีรายชื่อ service จาก Graph</div>`; return; }
+  const svcStatus = Object.fromEntries((data.services ?? []).map(s => [s.name, s.status]));
+  el.innerHTML = names.map(s => {
+    const hit = data.issues.filter(i => i.service === s);
+    const degraded = svcStatus[s] && svcStatus[s] !== "serviceOperational";
+    const cls = hit.some(i => i.classification === "incident") ? "s-inc" : (hit.length || degraded) ? "s-adv" : "s-ok";
+    const txt = cls === "s-inc" ? "Incident" : cls === "s-adv" ? "Advisory" : "Healthy";
+    return `<div><span><span class="s ${cls}"></span>${esc(s)}</span><span style="color:var(--muted);font-size:12.5px">${txt}</span></div>`;
+  }).join("");
+}
+
+function render(){
+  renderHeader(); renderBanner(); renderTiles(); renderList(); renderServices();
+}
+
+document.getElementById("filters").addEventListener("click", e => {
+  if (!e.target.dataset.f) return;
+  document.querySelectorAll(".chip").forEach(c => c.classList.toggle("on", c === e.target));
+  filter = e.target.dataset.f;
+  renderList();
 });
 
-document.getElementById("nInc").textContent = issues.filter(i=>i.classification==="incident").length;
-document.getElementById("nAdv").textContent = issues.filter(i=>i.classification==="advisory").length;
-document.getElementById("nSvc").textContent = new Set(issues.map(i=>i.service)).size;
-document.getElementById("lastPoll").textContent = new Date().toLocaleTimeString("th-TH",{timeZone:"Asia/Bangkok",hour:"2-digit",minute:"2-digit"});
+document.getElementById("list").addEventListener("toggle", e => {
+  const id = e.target.dataset?.id;
+  if (id) e.target.open ? openIds.add(id) : openIds.delete(id);
+}, true);
 
-document.getElementById("svc").innerHTML = services.map(s=>{
-  const hit = issues.filter(i=>i.service===s);
-  const cls = hit.some(i=>i.classification==="incident")?"s-inc":hit.length?"s-adv":"s-ok";
-  const txt = cls==="s-inc"?"Incident":cls==="s-adv"?"Advisory":"Healthy";
-  return `<div><span><span class="s ${cls}"></span>${s}</span><span style="color:var(--muted);font-size:12.5px">${txt}</span></div>`;
-}).join("");
+async function load(){
+  try {
+    const res = await fetch(STATUS_URL, { cache: "no-cache" });
+    if (!res.ok){
+      const body = await res.json().catch(() => ({}));
+      throw new Error(body.error || `HTTP ${res.status}`);
+    }
+    data = await res.json();
+    loadError = null;
+  } catch (err) {
+    loadError = err.message || String(err);
+    console.error("load status.json failed:", err);
+  }
+  render();
+}
 
-render("all");
+load();
+setInterval(load, REFRESH_MS);
 </script>
 </body>
 </html>

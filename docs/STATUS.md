@@ -4,7 +4,7 @@
 - [x] 1. Scaffold: Wrangler + TypeScript + Vitest, ย้าย mockup ไป `docs/mockup/` — verify: `npm test` รันได้, `wrangler dev` เปิดหน้า mockup ได้
 - [x] 2. Parsers (pure functions): strip HTML/entity, mojibake, "Next update by", RSS → schema — verify: unit tests ผ่านด้วย fixture จาก feed จริง
 - [x] 3. RSS pipeline: cron → KV → `GET /status.json` (memory cache) — verify: `wrangler dev --test-scheduled` แล้วได้ JSON ตรง schema
-- [ ] 4. Frontend: แปลง mockup ให้อ่าน `status.json` — verify: fixture 4 แบบ (incident / ว่าง / stale / rss) ทั้ง light และ dark
+- [x] 4. Frontend: แปลง mockup ให้อ่าน `status.json` — verify: fixture 4 แบบ (incident / ว่าง / stale / rss) ทั้ง light และ dark
 - [ ] 5. Graph: token, issues, healthOverviews, paging, retry, fallback counter — verify: unit tests ด้วย mocked fetch + รันกับ tenant จริงผ่าน `wrangler dev`
 - [ ] 6. Deploy: secrets + cron ทำงานบน `*.workers.dev` — verify: URL แสดงข้อมูลจริง, `generatedAt` ขยับทุก 5 นาที
 
@@ -18,6 +18,8 @@
 - 2026-11-13 — Milestone 1 เสร็จ: wrangler 4.161, TypeScript 7, Vitest 5; static assets จาก `public/`, `public/index.html` ยังเป็นสำเนา mockup (แปลงใน milestone 4); dev port 8799
 - 2026-11-13 — Milestone 2 เสร็จ: `src/text.ts` (decodeEntities, stripHtml, fixMojibake, parseNextUpdateBy), `src/rss.ts` (regex-based เพราะ Workers ไม่มี DOMParser); RSS description แยกตามหัวข้อ User impact / More info / Current status (ดู REQUIREMENTS); fixture จริง `test/fixtures/rss-mac.xml` (feed ณ 2026-11-13 ไม่มี mojibake จริง — ทดสอบด้วยข้อความสังเคราะห์)
 - 2026-11-13 — Milestone 3 เสร็จ: `src/poll.ts` + cron `*/5`; KV binding `STATUS` ไม่ใส่ id (wrangler 4 สร้างให้ตอน deploy); cache `/status.json` ด้วย memory ต่อ isolate 30 วิ แทน Cache API (ไม่แน่ใจว่า Cache API ทำงานบน `*.workers.dev`); poll ล้ม → ไม่เขียนทับ status.json เดิม (หน้าเว็บจะขึ้น Stale เอง)
+- 2026-11-13 — Milestone 4 เสร็จ: `public/index.html` อ่าน `status.json` ทุก 60 วิ, escape ทุกฟิลด์, คงสถานะการ์ดที่เปิดไว้ข้าม refresh; ตรวจด้วย Playwright (นอก project) กับ fixture incident / empty / stale / rss / ไม่มีข้อมูล ทั้ง light/dark + มือถือ 390px + e2e บน `wrangler dev`; เพิ่ม banner ส้ม "ข้อมูลไม่อัปเดต" เมื่อ Stale และไม่มี incident (ไม่ให้ขึ้นเขียว "healthy" ทั้งที่ข้อมูลเก่า); status ที่ไม่รู้จักแสดงชื่อดิบด้วย badge สีเทา; service overview = รายชื่อจาก `services` + service ที่มี issue (สีแดงถ้ามี incident, ส้มถ้ามี advisory หรือ status ≠ serviceOperational)
+- 2026-11-13 — พบว่า RSS `<guid>` เปลี่ยนทุกครั้งที่ Microsoft อัปเดตข้อความ (incident เดิม) — ไม่กระทบ v1 แต่ Telegram ในอนาคตใช้ guid diff ไม่ได้
 
 ## Open questions
 - App Registration (`ServiceHealth.Read.All` + admin consent) — ผู้ใช้สร้าง, ต้องมีก่อน milestone 5

@@ -9,24 +9,24 @@ Dashboard สาธารณะแสดงสถานะ Microsoft 365 ขอ�
 (ยอมรับแล้วว่าข้อมูล service health ของ tenant จะถูกเปิดเผยสาธารณะ)
 
 ## Version 1 — must have
-- [ ] Cron Worker poll ทุก 5 นาที
+- [x] Cron Worker poll ทุก 5 นาที
 - [ ] Graph: `GET /v1.0/admin/serviceAnnouncement/issues?$filter=isResolved eq false` และ `/healthOverviews`
       — รองรับ paging (`@odata.nextLink`) และ retry 429/5xx แบบ backoff
 - [ ] Fallback เป็น RSS `https://status.cloud.microsoft/api/feed/mac` เมื่อ Graph ล้มติดกัน 2 ครั้ง
-- [ ] Strip HTML / decode entity / แก้ mojibake ของข้อความ post และ description
-- [ ] ดึง "Next update by: ..." จาก post ล่าสุดด้วย regex
-- [ ] เก็บ `status.json` ใน KV ตาม schema ใน [M365_HEALTH_MONITOR_SPEC.md](../M365_HEALTH_MONITOR_SPEC.md) แล้วเสิร์ฟพร้อม cache (memory ต่อ isolate 30 วิ + `Cache-Control`)
-- [ ] หน้าเว็บตรงกับ mockup ครบทุกองค์ประกอบ (light/dark) อ่าน `status.json` ทุก 60 วิ
-  - [ ] Header แสดงเวลา poll จาก `generatedAt`
-  - [ ] Banner แดงเมื่อมี incident ที่เปิดอยู่ / เขียว "All services healthy" เมื่อไม่มี
-  - [ ] Tiles 4 ช่อง คำนวณจากข้อมูลจริง (รวมระยะเวลา incident ที่เปิดนานที่สุด)
-  - [ ] การ์ด issue + timeline posts ใหม่→เก่า, filter chips ทั้งหมด/Incident/Advisory
-  - [ ] Service overview ใช้ `services[].status`
-  - [ ] Badge แหล่งข้อมูล: `Graph` / `RSS fallback` (ส้ม) / `Stale` (แดง, `generatedAt` เก่ากว่า 15 นาที)
-  - [ ] Empty state เมื่อไม่มี issue
-  - [ ] Escape ข้อความทุกฟิลด์ก่อนใส่ HTML
-  - [ ] เวลาทั้งหมดแสดงเป็น Asia/Bangkok
-- [ ] Unit tests: strip HTML, parse "Next update by", parse RSS, แก้ mojibake
+- [x] Strip HTML / decode entity / แก้ mojibake ของข้อความ post และ description
+- [x] ดึง "Next update by: ..." จาก post ล่าสุดด้วย regex
+- [x] เก็บ `status.json` ใน KV ตาม schema ใน [M365_HEALTH_MONITOR_SPEC.md](../M365_HEALTH_MONITOR_SPEC.md) แล้วเสิร์ฟพร้อม cache (memory ต่อ isolate 30 วิ + `Cache-Control`)
+- [x] หน้าเว็บตรงกับ mockup ครบทุกองค์ประกอบ (light/dark) อ่าน `status.json` ทุก 60 วิ
+  - [x] Header แสดงเวลา poll จาก `generatedAt`
+  - [x] Banner แดงเมื่อมี incident ที่เปิดอยู่ / เขียว "All services healthy" เมื่อไม่มี / ส้ม "ข้อมูลไม่อัปเดต" เมื่อ Stale และไม่มี incident
+  - [x] Tiles 4 ช่อง คำนวณจากข้อมูลจริง (รวมระยะเวลา incident ที่เปิดนานที่สุด)
+  - [x] การ์ด issue + timeline posts ใหม่→เก่า, filter chips ทั้งหมด/Incident/Advisory
+  - [x] Service overview ใช้ `services[].status`
+  - [x] Badge แหล่งข้อมูล: `Graph` / `RSS fallback` (ส้ม) / `Stale` (แดง, `generatedAt` เก่ากว่า 15 นาที)
+  - [x] Empty state เมื่อไม่มี issue
+  - [x] Escape ข้อความทุกฟิลด์ก่อนใส่ HTML
+  - [x] เวลาทั้งหมดแสดงเป็น Asia/Bangkok
+- [x] Unit tests: strip HTML, parse "Next update by", parse RSS, แก้ mojibake
 
 ### การ map RSS → schema (ตกลงแล้ว)
 - `id` = `<guid>`, `service` = `<title>`, `classification` = `"incident"` (feed มีแต่ incident ใหญ่)
