@@ -13,3 +13,4 @@ binding = "STATUS"
 
 [vars]
 RSS_URL = "https://status.cloud.microsoft/api/feed/mac"
+CONSUMER_URL = "https://status.cloud.microsoft/api/posts/m365Consumer"

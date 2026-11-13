@@ -26,6 +26,7 @@
 - 2026-11-13 — Deploy ครั้งแรก (RSS-only) ตามที่ผู้ใช้ขอ: KV namespace `m365-monitor-status` ถูกสร้างอัตโนมัติ (ไม่มี id ใน `wrangler.toml`); ผู้ใช้เปลี่ยน workers.dev subdomain ของบัญชีเพื่อไม่ให้มีชื่อบัญชีใน URL — ไม่ใส่ URL จริงใน repo (repo เป็น public); KV write ต้องรอ propagate ~60 วิ ก่อน edge อื่นเห็น
 - 2026-11-13 — UI: ตอน `source: "rss"` ซ่อน id (guid), "เริ่ม" และ tile ระยะเวลา เพราะ RSS ไม่มีเวลาเริ่มจริง (pubDate = เวลาอัปเดตล่าสุด) และ guid เปลี่ยนทุกอัปเดต; Service overview แสดง "ยังไม่มีข้อมูล" แทนกล่องว่าง
 - 2026-11-13 — ผู้ใช้ไม่มีสิทธิ์ admin consent → v1 = RSS-only; โค้ด Graph คงไว้ ทำงานเมื่อตั้ง secrets; subtitle หน้าเว็บเปลี่ยนตาม source (RSS: "เฉพาะ incident ใหญ่ระดับ global")
+- 2026-11-13 — เพิ่มกล่อง Microsoft consumer products (ผู้ใช้เลือกทางเลือก A): ใช้ `/api/posts/m365Consumer` (พบจาก JS bundle ของหน้า status; มี `/api/posts/mac|ppac|azure` ด้วยแต่ไม่ได้ใช้ — RSS ยังเป็นแหล่งหลักเพราะเป็นช่องทางทางการ); ข้อมูลอยู่ใน `status.json.consumer`, ไม่นับรวม tiles, ล้มไม่กระทบ poll หลัก, KV write ยัง 1 ครั้ง/รอบ
 
 ## Open questions
 - เปิดใช้ Graph ต้องให้ Global Admin / Privileged Role Admin ขององค์กร grant consent `ServiceHealth.Read.All` (ผู้ใช้ไม่มีสิทธิ์)

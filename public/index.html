@@ -78,6 +78,19 @@ h2{font-size:15px;margin:0 0 10px;font-weight:600}
 .s-ok{background:var(--green)} .s-adv{background:var(--amber)} .s-inc{background:var(--red)}
 .legend{font-size:12px;color:var(--muted);margin-top:8px;display:flex;gap:12px;flex-wrap:wrap}
 .empty{color:var(--muted);padding:20px;text-align:center;background:var(--panel);border:1px dashed var(--line);border-radius:10px}
+.consumer{margin-top:24px}
+.consumer .note{font-size:12px;color:var(--muted);margin:-6px 0 10px}
+.csvc{background:var(--panel);border:1px solid var(--line);border-radius:10px;padding:4px 0}
+.csvc .row,.csvc summary{display:flex;justify-content:space-between;align-items:center;gap:8px;padding:8px 14px;font-size:13.5px}
+.csvc > *{border-bottom:1px solid var(--line)}
+.csvc > *:last-child{border-bottom:0}
+.csvc summary{list-style:none;cursor:pointer}
+.csvc summary::-webkit-details-marker{display:none}
+.csvc .st{color:var(--muted);font-size:12.5px;white-space:nowrap}
+.csvc .more{padding:0 14px 12px 31px;font-size:13px}
+.csvc .more p{margin:0 0 6px;white-space:pre-line}
+.csvc .more time{font-size:12px;color:var(--muted)}
+.csvc .none{padding:8px 14px;color:var(--muted);text-align:center;font-size:13.5px}
 @media (max-width:820px){.grid{grid-template-columns:1fr}.tiles{grid-template-columns:repeat(2,1fr)}}
 </style>
 </head>
@@ -117,6 +130,12 @@ h2{font-size:15px;margin:0 0 10px;font-weight:600}
       <h2>Service overview</h2>
       <div class="svc" id="svc"></div>
       <div class="legend"><span><span class="s s-ok"></span>ปกติ</span><span><span class="s s-adv"></span>Advisory</span><span><span class="s s-inc"></span>Incident</span></div>
+
+      <section class="consumer">
+        <h2>Microsoft consumer products</h2>
+        <div class="note" id="cnote">บริการสำหรับผู้ใช้ทั่วไป (Outlook.com, OneDrive ส่วนตัว ฯลฯ) — ไม่นับรวมในตัวเลขด้านบน</div>
+        <div class="csvc" id="consumer"></div>
+      </section>
     </aside>
   </div>
 </div>
@@ -247,8 +266,38 @@ function renderServices(){
   }).join("");
 }
 
+// Consumer statuses are Microsoft display strings ("Operational", "Service degradation", ...).
+function consumerDot(status){
+  const s = String(status).toLowerCase();
+  if (/operational|available|restored/.test(s)) return "s-ok";
+  if (/interruption|outage|down/.test(s)) return "s-inc";
+  return "s-adv";
+}
+
+function renderConsumer(){
+  const el = document.getElementById("consumer"), note = document.getElementById("cnote");
+  const c = data?.consumer;
+  note.dataset.base ??= note.textContent;
+  if (!c?.services?.length){ el.innerHTML = `<div class="none">ยังไม่มีข้อมูล</div>`; note.textContent = note.dataset.base; return; }
+  const stale = Date.now() - new Date(c.fetchedAt).getTime() > STALE_MS;
+  note.textContent = note.dataset.base + (stale ? ` · ⚠ ข้อมูลส่วนนี้ไม่อัปเดต (ล่าสุด ${fmt(c.fetchedAt)})` : "");
+  el.innerHTML = c.services.map(s => {
+    const head = `<span><span class="s ${consumerDot(s.status)}"></span>${esc(s.name)}</span><span class="st">${esc(s.status)}</span>`;
+    if (!s.title && !s.message) return `<div class="row">${head}</div>`;
+    return `<details data-cid="${esc(s.name)}" ${openIds.has("c:" + s.name) ? "open" : ""}><summary>${head.replace(/<\/span>$/, " ▾</span>")}</summary><div class="more">` +
+      (s.title ? `<p><b>${esc(s.title)}</b></p>` : "") +
+      (s.message ? `<p>${esc(s.message)}</p>` : "") +
+      (s.updated ? `<time>อัปเดต ${esc(fmt(s.updated))}</time>` : "") + `</div></details>`;
+  }).join("");
+}
+
+document.getElementById("consumer").addEventListener("toggle", e => {
+  const id = e.target.dataset?.cid;
+  if (id) e.target.open ? openIds.add("c:" + id) : openIds.delete("c:" + id);
+}, true);
+
 function render(){
-  renderHeader(); renderBanner(); renderTiles(); renderList(); renderServices();
+  renderHeader(); renderBanner(); renderTiles(); renderList(); renderServices(); renderConsumer();
 }
 
 document.getElementById("filters").addEventListener("click", e => {

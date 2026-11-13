@@ -1,11 +1,13 @@
 // One poll cycle: Graph first, RSS fallback, store status.json in KV.
+import { parseConsumer } from "./consumer";
 import { fetchGraph, type GraphCreds, type Sleep } from "./graph";
 import { parseRss } from "./rss";
-import type { StatusFile } from "./types";
+import type { ConsumerStatus, StatusFile } from "./types";
 
 export interface Env extends Partial<GraphCreds> {
   STATUS: KVNamespace;
   RSS_URL: string;
+  CONSUMER_URL?: string;
 }
 
 export const KEY_STATUS = "status.json"; // public, served at /status.json
@@ -25,6 +27,18 @@ export async function fetchText(url: string, fetchFn: typeof fetch = fetch): Pro
   });
   if (!res.ok) throw new Error(`GET ${url} -> HTTP ${res.status}`);
   return res.text();
+}
+
+/** Consumer status, or the previous one if this fetch fails (failure never blocks the main poll). */
+async function consumerOrPrevious(env: Env, now: Date, prev: StatusFile | null, fetchFn: typeof fetch): Promise<ConsumerStatus | null> {
+  if (!env.CONSUMER_URL) return null;
+  try {
+    const services = parseConsumer(JSON.parse(await fetchText(env.CONSUMER_URL, fetchFn)));
+    return { fetchedAt: now.toISOString(), services };
+  } catch (err) {
+    console.error("consumer poll failed:", err instanceof Error ? err.message : err);
+    return prev?.consumer ?? null;
+  }
 }
 
 function creds(env: Env): GraphCreds | null {
@@ -55,6 +69,7 @@ export async function poll(
   const state = (await env.STATUS.get<State>(KEY_STATE, "json")) ?? { graphFailures: 0 };
   const c = creds(env);
   let graphError: string | undefined;
+  const consumerP = consumerOrPrevious(env, now, prev, fetchFn); // runs alongside the main source
 
   if (c) {
     try {
@@ -65,6 +80,7 @@ export async function poll(
         lastGraphSuccessAt: now.toISOString(),
         issues,
         services,
+        consumer: await consumerP,
       };
       await env.STATUS.put(KEY_STATUS, JSON.stringify(status));
       if (state.graphFailures !== 0) await env.STATUS.put(KEY_STATE, JSON.stringify({ graphFailures: 0 }));
@@ -85,6 +101,7 @@ export async function poll(
     lastGraphSuccessAt: prev?.lastGraphSuccessAt ?? null,
     issues,
     services: prev?.services ?? [],
+    consumer: await consumerP,
   };
   await env.STATUS.put(KEY_STATUS, JSON.stringify(status));
   return { action: "rss", graphError };

@@ -7,7 +7,7 @@ Dashboard สาธารณะแสดงสถานะ Microsoft 365 ขอ�
 ## Tech stack
 - Language / runtime: TypeScript บน Cloudflare Workers (Cron Trigger + KV + static assets)
 - Key libraries: Wrangler, Vitest
-- Target systems: Microsoft Graph (production tenant, read-only), `status.cloud.microsoft` RSS
+- Target systems: Microsoft Graph (production tenant, read-only), `status.cloud.microsoft` RSS + `/api/posts/m365Consumer` (undocumented JSON)
 
 ## Commands
 - Install: `npm install` (npm อาจเตือนเรื่อง install scripts ของ esbuild/workerd — ไม่ต้อง approve, binary มากับ optional deps)

@@ -26,10 +26,26 @@ export interface ServiceStatus {
   status: string;
 }
 
+/** Microsoft consumer products (Outlook.com, OneDrive personal, ...). Not part of tenant counts. */
+export interface ConsumerService {
+  name: string;
+  status: string; // display text from Microsoft, e.g. "Operational", "Service degradation"
+  title: string; // "" when operational
+  message: string; // plain text
+  nextUpdateBy: string | null;
+  updated: string | null;
+}
+
+export interface ConsumerStatus {
+  fetchedAt: string;
+  services: ConsumerService[];
+}
+
 export interface StatusFile {
   generatedAt: string;
   source: "graph" | "rss";
   lastGraphSuccessAt: string | null;
   issues: Issue[];
   services: ServiceStatus[];
+  consumer: ConsumerStatus | null; // null until fetched once; kept from last success on failure
 }

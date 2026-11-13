@@ -2,6 +2,7 @@ import { describe, expect, it } from "vitest";
 import { ISSUES_URL, OVERVIEWS_URL } from "../src/graph";
 import { KEY_STATE, KEY_STATUS, poll } from "../src/poll";
 import type { StatusFile } from "../src/types";
+import consumerFixture from "./fixtures/m365-consumer.json?raw";
 import fixture from "./fixtures/rss-mac.xml?raw";
 import { CREDS, fakeGraph, RAW_ISSUE } from "./graph-fixtures";
 import { fakeKv } from "./kv";
@@ -23,7 +24,7 @@ const fails = (kv: ReturnType<typeof fakeKv>) => JSON.parse(kv.data.get(KEY_STAT
 
 const graphStatus: StatusFile = {
   generatedAt: "2026-11-13T03:00:00.000Z", source: "graph", lastGraphSuccessAt: "2026-11-13T03:00:00.000Z",
-  issues: [], services: [{ name: "Exchange Online", status: "serviceOperational" }],
+  issues: [], services: [{ name: "Exchange Online", status: "serviceOperational" }], consumer: null,
 };
 
 describe("poll without Graph credentials", () => {
@@ -33,6 +34,41 @@ describe("poll without Graph credentials", () => {
     expect(await poll({ STATUS: kv, RSS_URL }, now, g.fn)).toEqual({ action: "rss", graphError: undefined });
     expect(status(kv)).toMatchObject({ generatedAt: "2026-11-13T03:05:00.000Z", source: "rss", lastGraphSuccessAt: null, services: [] });
     expect(status(kv).issues).toHaveLength(1);
+  });
+});
+
+describe("poll consumer products", () => {
+  const CONSUMER_URL = "https://consumer.example/api";
+  const consumerOk = () => new Response(consumerFixture);
+  const prevConsumer = { fetchedAt: "2026-11-13T02:00:00.000Z", services: [{ name: "Old", status: "Operational", title: "", message: "", nextUpdateBy: null, updated: null }] };
+
+  it("adds consumer services alongside RSS issues", async () => {
+    const kv = fakeKv();
+    await poll({ STATUS: kv, RSS_URL, CONSUMER_URL }, now, fakeGraph({ [RSS_URL]: rssOk, [CONSUMER_URL]: consumerOk }).fn);
+    const s = status(kv);
+    expect(s.issues).toHaveLength(1);
+    expect(s.consumer?.fetchedAt).toBe("2026-11-13T03:05:00.000Z");
+    expect(s.consumer?.services).toHaveLength(10);
+  });
+
+  it("keeps the previous consumer data when the consumer API fails, main poll still written", async () => {
+    const kv = fakeKv({ [KEY_STATUS]: JSON.stringify({ ...graphStatus, source: "rss", consumer: prevConsumer }) });
+    await poll({ STATUS: kv, RSS_URL, CONSUMER_URL }, now, fakeGraph({ [RSS_URL]: rssOk, [CONSUMER_URL]: () => new Response("<html>", { status: 200 }) }).fn);
+    const s = status(kv);
+    expect(s.generatedAt).toBe("2026-11-13T03:05:00.000Z");
+    expect(s.consumer).toEqual(prevConsumer);
+  });
+
+  it("is null when the consumer API fails and nothing was fetched before", async () => {
+    const kv = fakeKv();
+    await poll({ STATUS: kv, RSS_URL, CONSUMER_URL }, now, fakeGraph({ [RSS_URL]: rssOk, [CONSUMER_URL]: () => new Response("", { status: 500 }) }).fn);
+    expect(status(kv).consumer).toBeNull();
+  });
+
+  it("is skipped when CONSUMER_URL is not set", async () => {
+    const kv = fakeKv();
+    await poll({ STATUS: kv, RSS_URL }, now, fakeGraph({ [RSS_URL]: rssOk }).fn);
+    expect(status(kv).consumer).toBeNull();
   });
 });
 

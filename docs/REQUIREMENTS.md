@@ -28,6 +28,9 @@ Dashboard สาธารณะแสดงสถานะ Microsoft 365 ขอ�
   - [x] Escape ข้อความทุกฟิลด์ก่อนใส่ HTML
   - [x] เวลาทั้งหมดแสดงเป็น Asia/Bangkok
 - [x] Unit tests: strip HTML, parse "Next update by", parse RSS, แก้ mojibake
+- [x] กล่อง "Microsoft consumer products" (เพิ่ม 2026-11-13): สถานะ 10 service ของ consumer จาก `status.cloud.microsoft/api/posts/m365Consumer`
+      แยกจาก tiles/banner; ดึงคู่ขนานกับแหล่งหลัก; ล้ม → คงข้อมูลเดิม + แจ้ง "ไม่อัปเดต" เมื่อเก่าเกิน 15 นาที
+      ⚠ เป็น JSON API ภายในของหน้า status (ไม่ได้ประกาศเป็นทางการ) — อาจเปลี่ยนโดยไม่แจ้ง; parser ตรวจรูปแบบแล้ว throw
 
 ### การ map RSS → schema (ตกลงแล้ว)
 - `id` = `<guid>`, `service` = `<title>`, `classification` = `"incident"` (feed มีแต่ incident ใหญ่)
@@ -51,7 +54,7 @@ Dashboard สาธารณะแสดงสถานะ Microsoft 365 ขอ�
 
 ## Environment & constraints
 - Runs on: Cloudflare Workers (plan Free) + Cron Trigger + KV, URL `*.workers.dev`
-- Talks to: Microsoft Graph (production tenant, read-only), `status.cloud.microsoft` RSS (public)
+- Talks to: Microsoft Graph (production tenant, read-only), `status.cloud.microsoft` RSS + consumer JSON (public)
 - Credentials: `TENANT_ID`, `CLIENT_ID`, `CLIENT_SECRET` ใน Worker Secrets; ในเครื่องใช้ `.dev.vars` (ไม่ commit)
 - Free plan limits: KV 1,000 writes/วัน (ใช้ ~288), 100k reads/วัน → `/status.json` ต้อง cache ไม่ให้อ่าน KV ทุก request
 
