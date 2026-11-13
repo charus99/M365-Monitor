@@ -1,0 +1,6 @@
+name = "m365-monitor"
+main = "src/index.ts"
+compatibility_date = "2026-11-10"
+
+[assets]
+directory = "./public"

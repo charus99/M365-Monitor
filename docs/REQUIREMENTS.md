@@ -60,4 +60,3 @@ Dashboard สาธารณะแสดงสถานะ Microsoft 365 ขอ�
 
 ## Open questions
 - App Registration พร้อม `ServiceHealth.Read.All` + admin consent — ผู้ใช้สร้างเอง (ต้องมีก่อน milestone 5)
-- ทุกเครื่องที่ทำงานมี Node.js และบัญชี Cloudflare แล้วหรือยัง

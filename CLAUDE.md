@@ -10,13 +10,16 @@ Dashboard สาธารณะแสดงสถานะ Microsoft 365 ขอ�
 - Target systems: Microsoft Graph (production tenant, read-only), `status.cloud.microsoft` RSS
 
 ## Commands
-<!-- เติมหลัง milestone 1 -->
-- Install: `npm install`
-- Run: `npx wrangler dev`
+- Install: `npm install` (npm อาจเตือนเรื่อง install scripts ของ esbuild/workerd — ไม่ต้อง approve, binary มากับ optional deps)
+- Run: `npm run dev` → http://127.0.0.1:8799 (พอร์ต 8787 ใช้โดย project อื่นในเครื่อง)
 - Test: `npm test`
-- Lint / type check: `<TBD>`
+- Type check: `npm run typecheck`
+- Deploy: `npm run deploy`
 
 ## Structure
+- `src/` — Worker code (`index.ts` = entry)
+- `public/` — static assets ที่เสิร์ฟ (`index.html` = หน้า dashboard)
+- `test/` — Vitest tests
 - `M365_HEALTH_MONITOR_SPEC.md` — spec ต้นฉบับ (schema, UI, data source)
 - `docs/mockup/` — mockup UI อ้างอิง (ต้องทำหน้าเว็บให้ตรง)
 - `docs/STATUS.md` — progress and decisions (keep updated)

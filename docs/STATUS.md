@@ -1,7 +1,7 @@
 # Status — M365 Service Health Monitor
 
 ## Milestones
-- [ ] 1. Scaffold: Wrangler + TypeScript + Vitest, ย้าย mockup ไป `docs/mockup/` — verify: `npm test` รันได้, `wrangler dev` เปิดหน้า mockup ได้
+- [x] 1. Scaffold: Wrangler + TypeScript + Vitest, ย้าย mockup ไป `docs/mockup/` — verify: `npm test` รันได้, `wrangler dev` เปิดหน้า mockup ได้
 - [ ] 2. Parsers (pure functions): strip HTML/entity, mojibake, "Next update by", RSS → schema — verify: unit tests ผ่านด้วย fixture จาก feed จริง
 - [ ] 3. RSS pipeline: cron → KV → `GET /status.json` (edge cache) — verify: `wrangler dev --test-scheduled` แล้วได้ JSON ตรง schema
 - [ ] 4. Frontend: แปลง mockup ให้อ่าน `status.json` — verify: fixture 4 แบบ (incident / ว่าง / stale / rss) ทั้ง light และ dark
@@ -15,7 +15,7 @@
 - 2026-11-13 — Stack: Cloudflare Worker (TypeScript) + Cron + KV บน `*.workers.dev` plan Free — ฟรี, cron ตรงเวลา, รองรับ Telegram ภายหลัง (แทน Python ใน spec)
 - 2026-11-13 — ทำทั้ง Graph และ RSS fallback ใน v1 — App Registration จะสร้างคู่ขนาน
 - 2026-11-13 — RSS URL `https://status.cloud.microsoft/api/feed/mac`; map: id=guid, service=title, classification=incident, services ใช้ชุดล่าสุดจาก Graph — RSS ไม่มีฟิลด์เหล่านี้
+- 2026-11-13 — Milestone 1 เสร็จ: wrangler 4.161, TypeScript 7, Vitest 5; static assets จาก `public/`, `public/index.html` ยังเป็นสำเนา mockup (แปลงใน milestone 4); dev port 8799
 
 ## Open questions
 - App Registration (`ServiceHealth.Read.All` + admin consent) — ผู้ใช้สร้าง, ต้องมีก่อน milestone 5
-- Node.js และบัญชี Cloudflare พร้อมในทุกเครื่องหรือยัง
