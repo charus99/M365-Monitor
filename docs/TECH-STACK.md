@@ -34,3 +34,16 @@ Browser ดึงข้อมูลเองไม่ได้ (Graph ต้อ�
   ```
 - ค่าที่ไม่ลับ (RSS URL, KV binding, cron) อยู่ใน `wrangler.toml`
 - Graph permission: Application `ServiceHealth.Read.All` + admin consent (read-only)
+- ไม่ได้ตั้ง secret ครบ 3 ตัว → poller ใช้ RSS อย่างเดียว (ใช้ dev ได้โดยไม่ต้องมี App Registration)
+
+### สร้าง App Registration (ทำครั้งเดียว, ต้องเป็น admin ที่ grant consent ได้)
+1. Microsoft Entra admin center → **App registrations** → **New registration**
+   ชื่อ `m365-monitor`, *Accounts in this organizational directory only*, ไม่ต้องใส่ Redirect URI
+2. **API permissions** → Add a permission → Microsoft Graph → **Application permissions** →
+   `ServiceHealth.Read.All` → **Grant admin consent for <tenant>** (สถานะต้องเป็นเครื่องหมายถูกสีเขียว)
+   — ลบ `User.Read` (delegated) ที่ติดมาโดย default ได้ ไม่ได้ใช้
+3. **Certificates & secrets** → New client secret → จด **Value** ทันที (ดูได้ครั้งเดียว)
+   และจดวันหมดอายุไว้ — secret หมดอายุ = Graph ล้ม → หน้าเว็บจะตกไปใช้ RSS fallback
+4. หน้า **Overview** → จด *Directory (tenant) ID* และ *Application (client) ID*
+5. ในเครื่อง: คัดลอก `.dev.vars.example` เป็น `.dev.vars` แล้วใส่ 3 ค่า (ห้าม commit)
+   Production: `npx wrangler secret put TENANT_ID` / `CLIENT_ID` / `CLIENT_SECRET`

@@ -5,7 +5,7 @@
 - [x] 2. Parsers (pure functions): strip HTML/entity, mojibake, "Next update by", RSS → schema — verify: unit tests ผ่านด้วย fixture จาก feed จริง
 - [x] 3. RSS pipeline: cron → KV → `GET /status.json` (memory cache) — verify: `wrangler dev --test-scheduled` แล้วได้ JSON ตรง schema
 - [x] 4. Frontend: แปลง mockup ให้อ่าน `status.json` — verify: fixture 4 แบบ (incident / ว่าง / stale / rss) ทั้ง light และ dark
-- [ ] 5. Graph: token, issues, healthOverviews, paging, retry, fallback counter — verify: unit tests ด้วย mocked fetch + รันกับ tenant จริงผ่าน `wrangler dev`
+- [ ] 5. Graph: token, issues, healthOverviews, paging, retry, fallback counter — verify: unit tests ด้วย mocked fetch + รันกับ tenant จริงผ่าน `wrangler dev` — **โค้ด + unit tests เสร็จ, รอทดสอบกับ tenant จริง (ต้องมี App Registration)**
 - [ ] 6. Deploy: secrets + cron ทำงานบน `*.workers.dev` — verify: URL แสดงข้อมูลจริง, `generatedAt` ขยับทุก 5 นาที
 
 ## Decisions log
@@ -20,6 +20,7 @@
 - 2026-11-13 — Milestone 3 เสร็จ: `src/poll.ts` + cron `*/5`; KV binding `STATUS` ไม่ใส่ id (wrangler 4 สร้างให้ตอน deploy); cache `/status.json` ด้วย memory ต่อ isolate 30 วิ แทน Cache API (ไม่แน่ใจว่า Cache API ทำงานบน `*.workers.dev`); poll ล้ม → ไม่เขียนทับ status.json เดิม (หน้าเว็บจะขึ้น Stale เอง)
 - 2026-11-13 — Milestone 4 เสร็จ: `public/index.html` อ่าน `status.json` ทุก 60 วิ, escape ทุกฟิลด์, คงสถานะการ์ดที่เปิดไว้ข้าม refresh; ตรวจด้วย Playwright (นอก project) กับ fixture incident / empty / stale / rss / ไม่มีข้อมูล ทั้ง light/dark + มือถือ 390px + e2e บน `wrangler dev`; เพิ่ม banner ส้ม "ข้อมูลไม่อัปเดต" เมื่อ Stale และไม่มี incident (ไม่ให้ขึ้นเขียว "healthy" ทั้งที่ข้อมูลเก่า); status ที่ไม่รู้จักแสดงชื่อดิบด้วย badge สีเทา; service overview = รายชื่อจาก `services` + service ที่มี issue (สีแดงถ้ามี incident, ส้มถ้ามี advisory หรือ status ≠ serviceOperational)
 - 2026-11-13 — พบว่า RSS `<guid>` เปลี่ยนทุกครั้งที่ Microsoft อัปเดตข้อความ (incident เดิม) — ไม่กระทบ v1 แต่ Telegram ในอนาคตใช้ guid diff ไม่ได้
+- 2026-11-13 — Milestone 5 (โค้ด): `src/graph.ts` token (client credentials ผ่าน fetch), paging `@odata.nextLink` (สูงสุด 20 หน้า), retry 429/5xx/network 3 ครั้ง backoff 1/2/4 วิ หรือ `Retry-After` (สูงสุด 10 วิ), 4xx อื่นไม่ retry; error ไม่มี secret. `poll.ts`: Graph ล้มครั้งแรก → คงข้อมูลเดิม, ครั้งที่ 2 ติด / ไม่มีข้อมูลเดิม / ไม่มี secret → RSS. เปลี่ยนจาก M3: เลิกใช้ KV key `services` (services อยู่ใน status.json แล้ว) ตัวนับล้มอยู่ใน key `state` (private) เขียนเฉพาะตอนค่าเปลี่ยน → ปกติเขียน KV 1 ครั้ง/รอบ
 
 ## Open questions
 - App Registration (`ServiceHealth.Read.All` + admin consent) — ผู้ใช้สร้าง, ต้องมีก่อน milestone 5
