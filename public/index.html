@@ -147,6 +147,9 @@ const issues = () => (data?.issues ?? []).slice().sort((a,b) =>
   (a.classification === "incident" ? 0 : 1) - (b.classification === "incident" ? 0 : 1) ||
   (b.modified || "").localeCompare(a.modified || ""));
 const incidents = () => issues().filter(i => i.classification === "incident");
+// RSS has no real start time (pubDate changes on every update) and its guid changes too,
+// so hide start/duration/id when the data came from RSS.
+const isRss = () => data?.source === "rss";
 
 function renderHeader(){
   const src = document.getElementById("src"), dot = document.getElementById("dot");
@@ -180,7 +183,7 @@ function renderBanner(){
   }
   const i = inc[0], more = inc.length - 1;
   el.className = "banner";
-  el.innerHTML = `<div><b>Major incident ${esc(i.id)}</b> — ${esc(i.service)}: ${esc(i.title)}` +
+  el.innerHTML = `<div><b>Major incident${isRss() ? "" : " " + esc(i.id)}</b> — ${esc(i.service)}: ${esc(i.title)}` +
     (i.nextUpdateBy ? ` · อัปเดตถัดไป <b class="mono">${esc(hhmm(i.nextUpdateBy))}</b> (เวลาไทย)` : "") +
     (more ? ` · และอีก ${more} incident` : "") + `</div>`;
 }
@@ -192,7 +195,7 @@ function renderTiles(){
   set("nAdv", all.length - inc.length);
   set("nSvc", new Set(all.map(i => i.service)).size);
   const starts = inc.map(i => new Date(i.start).getTime()).filter(Number.isFinite);
-  set("dur", starts.length ? duration(Date.now() - Math.min(...starts)) : "—");
+  set("dur", starts.length && !isRss() ? duration(Date.now() - Math.min(...starts)) : "—");
 }
 
 function renderList(){
@@ -209,7 +212,7 @@ function renderList(){
         <span class="bar"></span>
         <div>
           <div class="t">${esc(i.title)}</div>
-          <div class="meta"><span class="mono">${esc(i.id)}</span><span>${esc(i.service)}</span>${i.feature ? `<span>${esc(i.feature)}</span>` : ""}<span>เริ่ม ${esc(fmt(i.start))}</span><span>อัปเดต ${esc(fmt(i.modified))}</span></div>
+          <div class="meta">${isRss() ? "" : `<span class="mono">${esc(i.id)}</span>`}<span>${esc(i.service)}</span>${i.feature ? `<span>${esc(i.feature)}</span>` : ""}${isRss() ? "" : `<span>เริ่ม ${esc(fmt(i.start))}</span>`}<span>อัปเดต ${esc(fmt(i.modified))}</span></div>
         </div>
         <span class="badge${BADGE.has(i.status) ? " b-" + i.status : ""}">${esc(label[i.status] || i.status || "Unknown")}</span>
       </summary>
@@ -223,7 +226,7 @@ function renderList(){
 
 function renderServices(){
   const el = document.getElementById("svc");
-  if (!data){ el.innerHTML = ""; return; }
+  if (!data){ el.innerHTML = `<div class="none">ยังไม่มีข้อมูล</div>`; return; }
   const names = (data.services ?? []).map(s => s.name);
   for (const i of data.issues) if (!names.includes(i.service)) names.push(i.service);
   if (!names.length){ el.innerHTML = `<div class="none">ยังไม่มีรายชื่อ service จาก Graph</div>`; return; }

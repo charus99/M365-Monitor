@@ -14,7 +14,8 @@ Dashboard สาธารณะแสดงสถานะ Microsoft 365 ขอ�
 - Run: `npm run dev` → http://127.0.0.1:8799 (พอร์ต 8787 ใช้โดย project อื่นในเครื่อง)
 - Test: `npm test`
 - Type check: `npm run typecheck`
-- Deploy: `npm run deploy`
+- Deploy: `npm run deploy` (ต้อง `npx wrangler login` ก่อน; URL จริงดูจาก output — อย่าใส่ใน repo)
+- ดู log production: `npx wrangler tail m365-monitor --format pretty`
 - ทดสอบ cron ในเครื่อง: `npx wrangler dev --port 8799 --test-scheduled` แล้วเปิด `http://127.0.0.1:8799/__scheduled?cron=*/5+*+*+*+*` (ดึง RSS จริง) จากนั้นดู `/status.json`
 
 ## Structure
