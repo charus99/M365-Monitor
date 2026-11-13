@@ -31,7 +31,10 @@ Dashboard สาธารณะแสดงสถานะ Microsoft 365 ขอ�
 ### การ map RSS → schema (ตกลงแล้ว)
 - `id` = `<guid>`, `service` = `<title>`, `classification` = `"incident"` (feed มีแต่ incident ใหญ่)
 - `status` = `<status>` แปลงเป็น camelCase แบบ Graph (เช่น `ServiceDegradation` → `serviceDegradation`)
-- `start`/`modified` = `<pubDate>`, `impact`/`posts` จาก `<description>`
+- `start`/`modified` = `<pubDate>`
+- `<description>` แยกตามหัวข้อ: `title` = "User impact" (fallback `<title>`), `impact` = "More info" + bullets,
+  `posts` = [{ at: pubDate, text: "Current status" }], `nextUpdateBy` = "Next update by"
+  (ไม่มีหัวข้อ → ใช้ข้อความทั้งหมด), `feature` = ""
 - ตอนอยู่ใน RSS fallback: `services` ใช้รายชื่อชุดล่าสุดที่ได้จาก Graph (เก็บใน KV)
 
 ## Later — nice to have

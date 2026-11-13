@@ -2,7 +2,7 @@
 
 ## Milestones
 - [x] 1. Scaffold: Wrangler + TypeScript + Vitest, ย้าย mockup ไป `docs/mockup/` — verify: `npm test` รันได้, `wrangler dev` เปิดหน้า mockup ได้
-- [ ] 2. Parsers (pure functions): strip HTML/entity, mojibake, "Next update by", RSS → schema — verify: unit tests ผ่านด้วย fixture จาก feed จริง
+- [x] 2. Parsers (pure functions): strip HTML/entity, mojibake, "Next update by", RSS → schema — verify: unit tests ผ่านด้วย fixture จาก feed จริง
 - [ ] 3. RSS pipeline: cron → KV → `GET /status.json` (edge cache) — verify: `wrangler dev --test-scheduled` แล้วได้ JSON ตรง schema
 - [ ] 4. Frontend: แปลง mockup ให้อ่าน `status.json` — verify: fixture 4 แบบ (incident / ว่าง / stale / rss) ทั้ง light และ dark
 - [ ] 5. Graph: token, issues, healthOverviews, paging, retry, fallback counter — verify: unit tests ด้วย mocked fetch + รันกับ tenant จริงผ่าน `wrangler dev`
@@ -16,6 +16,7 @@
 - 2026-11-13 — ทำทั้ง Graph และ RSS fallback ใน v1 — App Registration จะสร้างคู่ขนาน
 - 2026-11-13 — RSS URL `https://status.cloud.microsoft/api/feed/mac`; map: id=guid, service=title, classification=incident, services ใช้ชุดล่าสุดจาก Graph — RSS ไม่มีฟิลด์เหล่านี้
 - 2026-11-13 — Milestone 1 เสร็จ: wrangler 4.161, TypeScript 7, Vitest 5; static assets จาก `public/`, `public/index.html` ยังเป็นสำเนา mockup (แปลงใน milestone 4); dev port 8799
+- 2026-11-13 — Milestone 2 เสร็จ: `src/text.ts` (decodeEntities, stripHtml, fixMojibake, parseNextUpdateBy), `src/rss.ts` (regex-based เพราะ Workers ไม่มี DOMParser); RSS description แยกตามหัวข้อ User impact / More info / Current status (ดู REQUIREMENTS); fixture จริง `test/fixtures/rss-mac.xml` (feed ณ 2026-11-13 ไม่มี mojibake จริง — ทดสอบด้วยข้อความสังเคราะห์)
 
 ## Open questions
 - App Registration (`ServiceHealth.Read.All` + admin consent) — ผู้ใช้สร้าง, ต้องมีก่อน milestone 5
