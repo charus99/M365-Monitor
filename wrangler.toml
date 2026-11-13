@@ -4,3 +4,12 @@ compatibility_date = "2026-11-10"
 
 [assets]
 directory = "./public"
+
+[triggers]
+crons = ["*/5 * * * *"]
+
+[[kv_namespaces]]
+binding = "STATUS"
+
+[vars]
+RSS_URL = "https://status.cloud.microsoft/api/feed/mac"

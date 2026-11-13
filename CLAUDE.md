@@ -15,6 +15,7 @@ Dashboard สาธารณะแสดงสถานะ Microsoft 365 ขอ�
 - Test: `npm test`
 - Type check: `npm run typecheck`
 - Deploy: `npm run deploy`
+- ทดสอบ cron ในเครื่อง: `npx wrangler dev --port 8799 --test-scheduled` แล้วเปิด `http://127.0.0.1:8799/__scheduled?cron=*/5+*+*+*+*` (ดึง RSS จริง) จากนั้นดู `/status.json`
 
 ## Structure
 - `src/` — Worker code (`index.ts` = entry)
@@ -31,7 +32,7 @@ Dashboard สาธารณะแสดงสถานะ Microsoft 365 ขอ�
 - Browser ห้ามเรียก Graph หรือ RSS ตรง — ทุกอย่างผ่าน Worker
 - Escape ข้อความจาก Graph/RSS ทุกฟิลด์ก่อนใส่ HTML
 - Parser/mapping เป็น pure function แยกจาก I/O เพื่อให้ unit test ได้
-- ระวังโควตา plan Free: KV writes ≤ 1,000/วัน, `/status.json` ต้องมี edge cache
+- ระวังโควตา plan Free: KV writes ≤ 1,000/วัน, `/status.json` ต้อง cache (ดู memo ใน `src/index.ts`)
 
 ## Test / lab environment
 - ไม่มี tenant ทดสอบ — Graph คือ production (read-only) ใช้ fixture/mocked fetch ใน unit test

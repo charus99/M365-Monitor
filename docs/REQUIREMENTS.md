@@ -15,7 +15,7 @@ Dashboard สาธารณะแสดงสถานะ Microsoft 365 ขอ�
 - [ ] Fallback เป็น RSS `https://status.cloud.microsoft/api/feed/mac` เมื่อ Graph ล้มติดกัน 2 ครั้ง
 - [ ] Strip HTML / decode entity / แก้ mojibake ของข้อความ post และ description
 - [ ] ดึง "Next update by: ..." จาก post ล่าสุดด้วย regex
-- [ ] เก็บ `status.json` ใน KV ตาม schema ใน [M365_HEALTH_MONITOR_SPEC.md](../M365_HEALTH_MONITOR_SPEC.md) แล้วเสิร์ฟพร้อม edge cache
+- [ ] เก็บ `status.json` ใน KV ตาม schema ใน [M365_HEALTH_MONITOR_SPEC.md](../M365_HEALTH_MONITOR_SPEC.md) แล้วเสิร์ฟพร้อม cache (memory ต่อ isolate 30 วิ + `Cache-Control`)
 - [ ] หน้าเว็บตรงกับ mockup ครบทุกองค์ประกอบ (light/dark) อ่าน `status.json` ทุก 60 วิ
   - [ ] Header แสดงเวลา poll จาก `generatedAt`
   - [ ] Banner แดงเมื่อมี incident ที่เปิดอยู่ / เขียว "All services healthy" เมื่อไม่มี
@@ -51,7 +51,7 @@ Dashboard สาธารณะแสดงสถานะ Microsoft 365 ขอ�
 - Runs on: Cloudflare Workers (plan Free) + Cron Trigger + KV, URL `*.workers.dev`
 - Talks to: Microsoft Graph (production tenant, read-only), `status.cloud.microsoft` RSS (public)
 - Credentials: `TENANT_ID`, `CLIENT_ID`, `CLIENT_SECRET` ใน Worker Secrets; ในเครื่องใช้ `.dev.vars` (ไม่ commit)
-- Free plan limits: KV 1,000 writes/วัน (ใช้ ~288), 100k reads/วัน → ต้องมี edge cache บน `/status.json`
+- Free plan limits: KV 1,000 writes/วัน (ใช้ ~288), 100k reads/วัน → `/status.json` ต้อง cache ไม่ให้อ่าน KV ทุก request
 
 ## Done criteria for version 1
 - หน้าเว็บบน `*.workers.dev` หน้าตาตรง mockup และไม่มีข้อมูล hardcode เหลือ
