@@ -25,6 +25,8 @@ header{display:flex;flex-wrap:wrap;gap:12px;align-items:flex-end;justify-content
 h1{font-size:22px;margin:0;font-weight:600}
 .sub{color:var(--muted);font-size:13px}
 .mono{font-family:"IBM Plex Mono",monospace}
+.sub a{color:var(--blue);text-decoration:none}
+.sub a:hover{text-decoration:underline}
 .sample{font-size:12px;background:var(--amber-bg);color:var(--amber);padding:3px 10px;border-radius:999px;font-weight:500}
 .sample.src-graph{background:var(--green-bg);color:var(--green)}
 .sample.src-stale{background:var(--red-bg);color:var(--red)}
@@ -84,7 +86,7 @@ h2{font-size:15px;margin:0 0 10px;font-weight:600}
   <header>
     <div>
       <h1>M365 Service Health Monitor</h1>
-      <div class="sub" id="sub">แหล่งข้อมูล: Graph API <span class="mono">/admin/serviceAnnouncement/issues</span> · fallback: Public RSS</div>
+      <div class="sub" id="sub">แหล่งข้อมูล: Graph API <span class="mono">/admin/serviceAnnouncement/issues</span> · fallback: <a href="https://status.cloud.microsoft/" target="_blank" rel="noopener">Public RSS ↗</a></div>
     </div>
     <div style="display:flex;gap:12px;align-items:center;flex-wrap:wrap">
       <span class="sample" id="src" hidden></span>
@@ -159,7 +161,7 @@ function renderHeader(){
   const sub = document.getElementById("sub");
   sub.dataset.graph ??= sub.innerHTML;
   sub.innerHTML = isRss()
-    ? `แหล่งข้อมูล: Public RSS <span class="mono">status.cloud.microsoft</span> · เฉพาะ incident ใหญ่ระดับ global ของ Microsoft`
+    ? `แหล่งข้อมูล: Public RSS <a class="mono" href="https://status.cloud.microsoft/" target="_blank" rel="noopener">status.cloud.microsoft ↗</a> ·เฉพาะ incident ใหญ่ระดับ global ของ Microsoft`
     : sub.dataset.graph;
   src.className = "sample " + (stale ? "src-stale" : data.source === "rss" ? "" : "src-graph");
   src.textContent = stale ? "Stale" : data.source === "rss" ? "RSS fallback" : "Graph";
