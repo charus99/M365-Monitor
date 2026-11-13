@@ -1,0 +1,195 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>M365 Service Health Monitor</title>
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+Thai:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+:root{
+  --bg:#f5f6f8; --panel:#ffffff; --ink:#1b1f24; --muted:#5e6672; --line:#e3e6ea;
+  --red:#d1352b; --red-bg:#fdecea; --amber:#b86e00; --amber-bg:#fff4e0;
+  --blue:#1f6feb; --blue-bg:#e8f0fe; --green:#1a7f37; --green-bg:#e6f4ea; --grey-bg:#eef0f3;
+}
+@media (prefers-color-scheme: dark){
+  :root{
+    --bg:#0f1216; --panel:#171b21; --ink:#e6e9ee; --muted:#9aa3ae; --line:#2a3039;
+    --red:#ff6b61; --red-bg:#3a1a18; --amber:#f0a83a; --amber-bg:#3a2a10;
+    --blue:#6ea8ff; --blue-bg:#14233d; --green:#4cc070; --green-bg:#12301c; --grey-bg:#222831;
+  }
+}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--ink);font:15px/1.55 "IBM Plex Sans Thai",system-ui,sans-serif}
+.wrap{max-width:1100px;margin:0 auto;padding:24px 16px 48px}
+header{display:flex;flex-wrap:wrap;gap:12px;align-items:flex-end;justify-content:space-between;margin-bottom:20px}
+h1{font-size:22px;margin:0;font-weight:600}
+.sub{color:var(--muted);font-size:13px}
+.mono{font-family:"IBM Plex Mono",monospace}
+.sample{font-size:12px;background:var(--amber-bg);color:var(--amber);padding:3px 10px;border-radius:999px;font-weight:500}
+.poll{display:flex;align-items:center;gap:8px;font-size:13px;color:var(--muted)}
+.dot{width:8px;height:8px;border-radius:50%;background:var(--green);box-shadow:0 0 0 0 var(--green);animation:pulse 2s infinite}
+@keyframes pulse{0%{box-shadow:0 0 0 0 rgba(76,192,112,.5)}70%{box-shadow:0 0 0 8px rgba(76,192,112,0)}100%{box-shadow:0 0 0 0 rgba(76,192,112,0)}}
+.banner{background:var(--red-bg);border:1px solid var(--red);border-left-width:4px;border-radius:8px;padding:12px 16px;margin-bottom:20px;display:flex;gap:10px;align-items:flex-start}
+.banner b{color:var(--red)}
+.tiles{display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin-bottom:24px}
+.tile{background:var(--panel);border:1px solid var(--line);border-radius:10px;padding:14px 16px}
+.tile .n{font-size:28px;font-weight:600;line-height:1.1}
+.tile .l{font-size:13px;color:var(--muted)}
+.grid{display:grid;grid-template-columns:2fr 1fr;gap:20px}
+h2{font-size:15px;margin:0 0 10px;font-weight:600}
+.filters{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:12px}
+.chip{border:1px solid var(--line);background:var(--panel);color:var(--ink);border-radius:999px;padding:4px 12px;font:inherit;font-size:13px;cursor:pointer}
+.chip.on{background:var(--ink);color:var(--panel);border-color:var(--ink)}
+.issue{background:var(--panel);border:1px solid var(--line);border-radius:10px;margin-bottom:10px;overflow:hidden}
+.issue summary{list-style:none;cursor:pointer;padding:14px 16px;display:grid;grid-template-columns:auto 1fr auto;gap:12px;align-items:start}
+.issue summary::-webkit-details-marker{display:none}
+.bar{width:4px;align-self:stretch;border-radius:2px}
+.inc .bar{background:var(--red)} .adv .bar{background:var(--amber)}
+.t{font-weight:500}
+.meta{font-size:12.5px;color:var(--muted);margin-top:4px;display:flex;flex-wrap:wrap;gap:4px 12px}
+.badge{font-size:12px;padding:2px 9px;border-radius:999px;white-space:nowrap;font-weight:500}
+.b-investigating{background:var(--grey-bg);color:var(--muted)}
+.b-serviceInterruption{background:var(--red-bg);color:var(--red)}
+.b-serviceDegradation{background:var(--amber-bg);color:var(--amber)}
+.b-restoringService{background:var(--blue-bg);color:var(--blue)}
+.b-serviceRestored{background:var(--green-bg);color:var(--green)}
+.body{border-top:1px solid var(--line);padding:12px 16px 16px 32px}
+.impact{font-size:14px;margin:0 0 12px}
+.tl{border-left:2px solid var(--line);margin-left:4px;padding-left:16px}
+.post{position:relative;margin-bottom:12px;font-size:13.5px}
+.post:before{content:"";position:absolute;left:-22px;top:6px;width:10px;height:10px;border-radius:50%;background:var(--panel);border:2px solid var(--muted)}
+.post:first-child:before{border-color:var(--blue);background:var(--blue)}
+.post time{font-size:12px;color:var(--muted)}
+.svc{background:var(--panel);border:1px solid var(--line);border-radius:10px;padding:4px 0}
+.svc div{display:flex;justify-content:space-between;align-items:center;padding:8px 14px;font-size:13.5px;border-bottom:1px solid var(--line)}
+.svc div:last-child{border-bottom:0}
+.s{width:9px;height:9px;border-radius:50%;display:inline-block;margin-right:8px}
+.s-ok{background:var(--green)} .s-adv{background:var(--amber)} .s-inc{background:var(--red)}
+.legend{font-size:12px;color:var(--muted);margin-top:8px;display:flex;gap:12px;flex-wrap:wrap}
+.empty{color:var(--muted);padding:20px;text-align:center;background:var(--panel);border:1px dashed var(--line);border-radius:10px}
+@media (max-width:820px){.grid{grid-template-columns:1fr}.tiles{grid-template-columns:repeat(2,1fr)}}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header>
+    <div>
+      <h1>M365 Service Health Monitor</h1>
+      <div class="sub">แหล่งข้อมูล: Graph API <span class="mono">/admin/serviceAnnouncement/issues</span> · fallback: Public RSS</div>
+    </div>
+    <div style="display:flex;gap:12px;align-items:center;flex-wrap:wrap">
+      <span class="sample">ข้อมูลตัวอย่าง</span>
+      <div class="poll"><span class="dot"></span>Poll ล่าสุด <span class="mono" id="lastPoll"></span> · ทุก 5 นาที</div>
+    </div>
+  </header>
+
+  <div class="banner">
+    <div><b>Major incident EX1234567</b> — Exchange Online และบริการที่พึ่ง Exchange ใช้งานไม่ได้หลายส่วน · อัปเดตถัดไป <b class="mono">10:00</b> (เวลาไทย)</div>
+  </div>
+
+  <div class="tiles">
+    <div class="tile"><div class="n" style="color:var(--red)" id="nInc">0</div><div class="l">Incident ที่ยังเปิดอยู่</div></div>
+    <div class="tile"><div class="n" style="color:var(--amber)" id="nAdv">0</div><div class="l">Advisory ที่ยังเปิดอยู่</div></div>
+    <div class="tile"><div class="n" id="nSvc">0</div><div class="l">Service ที่ได้รับผลกระทบ</div></div>
+    <div class="tile"><div class="n mono" style="font-size:22px;padding-top:4px">6h 18m</div><div class="l">ระยะเวลา incident หลัก</div></div>
+  </div>
+
+  <div class="grid">
+    <section>
+      <h2>Active issues</h2>
+      <div class="filters" id="filters">
+        <button class="chip on" data-f="all">ทั้งหมด</button>
+        <button class="chip" data-f="incident">Incident</button>
+        <button class="chip" data-f="advisory">Advisory</button>
+      </div>
+      <div id="list"></div>
+    </section>
+    <aside>
+      <h2>Service overview</h2>
+      <div class="svc" id="svc"></div>
+      <div class="legend"><span><span class="s s-ok"></span>ปกติ</span><span><span class="s s-adv"></span>Advisory</span><span><span class="s s-inc"></span>Incident</span></div>
+    </aside>
+  </div>
+</div>
+
+<script>
+const issues = [
+  { id:"EX1234567", service:"Exchange Online", feature:"E-Mail and calendar access", classification:"incident",
+    status:"restoringService", start:"2026-11-12T19:40:00Z", modified:"2026-11-13T01:58:00Z",
+    title:"Users may be unable to connect to multiple Microsoft 365 services",
+    impact:"ฟีเจอร์ที่พึ่ง Exchange Online ได้รับผลกระทบ: OWA, Outlook (MAPI), EAS, REST และอีเมลส่งล่าช้า",
+    posts:[
+      ["2026-11-13T01:58:00Z","กำลังเพิ่ม infrastructure capacity เพื่อรองรับ traffic ของ region ที่ทยอยกลับมาออนไลน์ และติดตามผลการเปลี่ยนแปลง"],
+      ["2026-11-13T00:30:00Z","บาง region เริ่มกลับมาให้บริการ กำลัง rebalance traffic"],
+      ["2026-11-12T22:10:00Z","ระบุสาเหตุเบื้องต้นได้แล้ว อยู่ระหว่างดำเนินการแก้ไข"],
+      ["2026-11-12T19:55:00Z","กำลังตรวจสอบรายงานว่าผู้ใช้เข้า mailbox ไม่ได้"]
+    ]},
+  { id:"TM987654", service:"Microsoft Teams", feature:"Calendar & meetings", classification:"advisory",
+    status:"serviceDegradation", start:"2026-11-12T20:05:00Z", modified:"2026-11-13T01:40:00Z",
+    title:"Calendar and meeting scheduling may fail",
+    impact:"สร้าง/แก้ไขนัดประชุมไม่ได้ แต่แชทและประชุมออนไลน์ยังใช้ได้",
+    posts:[["2026-11-13T01:40:00Z","ผลกระทบสัมพันธ์กับ EX1234567 จะฟื้นตามกัน"]]},
+  { id:"MO445566", service:"Microsoft Defender for Office 365", feature:"Safe Links", classification:"incident",
+    status:"serviceInterruption", start:"2026-11-12T20:15:00Z", modified:"2026-11-13T01:20:00Z",
+    title:"Safe Links may be unable to verify URLs",
+    impact:"การคลิกลิงก์ใน Outlook/Teams อาจไม่ผ่านการตรวจ URL — เฝ้าระวัง phishing",
+    posts:[["2026-11-13T01:20:00Z","อยู่ระหว่างกู้คืนพร้อมกับ Exchange Online"]]},
+  { id:"PU778899", service:"Microsoft Purview", feature:"DLP / Auto-labeling", classification:"advisory",
+    status:"investigating", start:"2026-11-12T21:00:00Z", modified:"2026-11-13T00:50:00Z",
+    title:"DLP and auto-labeling policies may not apply",
+    impact:"DLP, Communication Compliance และ Data Classification อาจไม่ทำงาน",
+    posts:[["2026-11-13T00:50:00Z","กำลังตรวจสอบผลกระทบต่อ policy evaluation"]]},
+  { id:"SP112233", service:"SharePoint Online", feature:"Exchange-dependent features", classification:"advisory",
+    status:"restoringService", start:"2026-11-12T20:30:00Z", modified:"2026-11-13T01:10:00Z",
+    title:"Features that depend on Exchange Online may be impacted",
+    impact:"เข้าไฟล์ใน SharePoint ได้ปกติ แต่ฟีเจอร์ที่เชื่อมกับเมลอาจใช้ไม่ได้",
+    posts:[["2026-11-13T01:10:00Z","เริ่มเห็นการฟื้นตัวบางส่วน"]]}
+];
+const services = ["Exchange Online","Microsoft Teams","SharePoint Online","OneDrive for Business",
+  "Microsoft Defender for Office 365","Microsoft Purview","Microsoft Intune","Microsoft Entra ID","Power BI","Planner"];
+
+const fmt = iso => new Date(iso).toLocaleString("th-TH",{timeZone:"Asia/Bangkok",day:"2-digit",month:"short",hour:"2-digit",minute:"2-digit"});
+const label = {investigating:"Investigating",serviceInterruption:"Interruption",serviceDegradation:"Degradation",restoringService:"Restoring",serviceRestored:"Restored"};
+
+function render(f){
+  const list = document.getElementById("list");
+  const rows = issues.filter(i => f==="all" || i.classification===f);
+  list.innerHTML = rows.length ? rows.map((i,k) => `
+    <details class="issue ${i.classification==="incident"?"inc":"adv"}" ${k===0&&f!=="advisory"?"open":""}>
+      <summary>
+        <span class="bar"></span>
+        <div>
+          <div class="t">${i.title}</div>
+          <div class="meta"><span class="mono">${i.id}</span><span>${i.service}</span><span>เริ่ม ${fmt(i.start)}</span><span>อัปเดต ${fmt(i.modified)}</span></div>
+        </div>
+        <span class="badge b-${i.status}">${label[i.status]}</span>
+      </summary>
+      <div class="body">
+        <p class="impact">${i.impact}</p>
+        <div class="tl">${i.posts.map(p=>`<div class="post"><time>${fmt(p[0])}</time><div>${p[1]}</div></div>`).join("")}</div>
+      </div>
+    </details>`).join("") : `<div class="empty">ไม่มีรายการ</div>`;
+}
+
+document.getElementById("filters").addEventListener("click", e=>{
+  if(!e.target.dataset.f) return;
+  document.querySelectorAll(".chip").forEach(c=>c.classList.toggle("on", c===e.target));
+  render(e.target.dataset.f);
+});
+
+document.getElementById("nInc").textContent = issues.filter(i=>i.classification==="incident").length;
+document.getElementById("nAdv").textContent = issues.filter(i=>i.classification==="advisory").length;
+document.getElementById("nSvc").textContent = new Set(issues.map(i=>i.service)).size;
+document.getElementById("lastPoll").textContent = new Date().toLocaleTimeString("th-TH",{timeZone:"Asia/Bangkok",hour:"2-digit",minute:"2-digit"});
+
+document.getElementById("svc").innerHTML = services.map(s=>{
+  const hit = issues.filter(i=>i.service===s);
+  const cls = hit.some(i=>i.classification==="incident")?"s-inc":hit.length?"s-adv":"s-ok";
+  const txt = cls==="s-inc"?"Incident":cls==="s-adv"?"Advisory":"Healthy";
+  return `<div><span><span class="s ${cls}"></span>${s}</span><span style="color:var(--muted);font-size:12.5px">${txt}</span></div>`;
+}).join("");
+
+render("all");
+</script>
+</body>
+</html>
