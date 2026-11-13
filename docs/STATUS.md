@@ -6,7 +6,7 @@
 - [x] 3. RSS pipeline: cron → KV → `GET /status.json` (memory cache) — verify: `wrangler dev --test-scheduled` แล้วได้ JSON ตรง schema
 - [x] 4. Frontend: แปลง mockup ให้อ่าน `status.json` — verify: fixture 4 แบบ (incident / ว่าง / stale / rss) ทั้ง light และ dark
 - [ ] 5. Graph: token, issues, healthOverviews, paging, retry, fallback counter — verify: unit tests ด้วย mocked fetch + รันกับ tenant จริงผ่าน `wrangler dev` — **โค้ด + unit tests เสร็จ, รอทดสอบกับ tenant จริง (ต้องมี App Registration)**
-- [ ] 6. Deploy: secrets + cron ทำงานบน `*.workers.dev` — verify: URL แสดงข้อมูลจริง, `generatedAt` ขยับทุก 5 นาที — **deploy แบบ RSS-only แล้ว (ยังไม่มี secrets); cron รอบแรกเขียนข้อมูลสำเร็จ, หน้าเว็บแสดงข้อมูลจริง**
+- [ ] 6. Deploy: secrets + cron ทำงานบน `*.workers.dev` — verify: URL แสดงข้อมูลจริง, `generatedAt` ขยับทุก 5 นาที — **deploy แบบ RSS-only แล้ว (ยังไม่มี secrets); cron เขียนข้อมูลสำเร็จ, หน้าเว็บแสดงข้อมูลจริง, `generatedAt` ขยับทุก 5 นาที (03:25 → 03:30 UTC) — เหลือ: ใส่ secrets แล้วยืนยันว่า source เป็น graph**
 
 ## Decisions log
 - 2026-11-13 — เป็น project แยก ไม่รวมกับ project อื่น — ผู้ใช้ตัดสินใจ (spec เดิมให้รวมกับ project Python)
